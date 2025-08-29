@@ -1,0 +1,6 @@
+Archipelago: {
+  death_link: "true"
+}
+description: 'Spectator slot'
+game: Archipelago
+name: Spectator
