@@ -5,6 +5,7 @@ import re
 import shutil
 import subprocess
 import zipfile
+import atexit
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
 from time import sleep
@@ -89,6 +90,7 @@ async def ap_server(death_count, client):
     ap_server_file = os.path.join(AP_INSTALL_LOCATION, "ArchipelagoServer" + file_extension)
     p = subprocess.Popen((ap_server_file, "--host", "0.0.0.0", "--port", "6472", "--hint_cost", "10", output_file),
                          stdin=subprocess.PIPE, preexec_fn=os.setsid if os.name != "nt" else None)
+    atexit.register(p.terminate)
     locations_slots = get_locations_from_spoiler(ap_spoiler_log)
     for i in range(0, death_count * FREE_LOCATIONS_PER_DEATH):
         if i > len(locations_slots) - 1:
