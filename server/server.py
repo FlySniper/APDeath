@@ -7,6 +7,7 @@ import subprocess
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
+from time import sleep
 
 from client.APClient import run_client, set_client_running
 from config.config import AP_BASE_YAML_LOCATION, AP_INSTALL_LOCATION, FREE_LOCATIONS_PER_DEATH
@@ -97,6 +98,7 @@ async def ap_server(death_count, client):
         locations_slots.pop(index)
         p.stdin.write(f"/send_location {location_slot[1]} {location_slot[0]}\n".encode())
     p.stdin.flush()
+    sleep(5)
     await run_client()
     p.terminate()
     if not REROLL:

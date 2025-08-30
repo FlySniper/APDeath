@@ -13,7 +13,7 @@ def set_client_running(client_running):
 async def run_client():
     global CLIENT_RUNNING
     CLIENT_RUNNING = True
-    async with websockets.connect("ws://localhost:6472") as websocket:
+    async with websockets.connect("ws://127.0.0.1:6472") as websocket:
         while CLIENT_RUNNING:
             room_info = await websocket.recv()
             while CLIENT_RUNNING:
@@ -26,11 +26,10 @@ async def run_client():
             bounced_resp = await websocket.recv()
             while CLIENT_RUNNING:
                 try:
-                    async with asyncio.timeout(5):
-                        server_resp = await websocket.recv()
-                        server_resp_json = json.loads(server_resp)
-                        if server_resp_json[0]["cmd"] == "Bounced" and "DeathLink" in server_resp_json[0]["tags"]:
-                            return
+                    server_resp = await asyncio.wait_for(websocket.recv(), timeout=5)
+                    server_resp_json = json.loads(server_resp)
+                    if server_resp_json[0]["cmd"] == "Bounced" and "DeathLink" in server_resp_json[0]["tags"]:
+                        return
                 except TimeoutError:
                     pass
 
