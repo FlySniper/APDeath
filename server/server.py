@@ -104,7 +104,7 @@ async def ap_server(death_count, client):
         locations_slots.pop(index)
         p.stdin.write(f"/send_location {location_slot[1]} {location_slot[0]}\n".encode())
     p.stdin.flush()
-    sleep(5)
+    sleep(30)
     await server_up_message(client, artifacts_file)
     await run_client()
     p.terminate()
