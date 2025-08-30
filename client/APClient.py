@@ -30,7 +30,7 @@ async def run_client():
                     server_resp_json = json.loads(server_resp)
                     if server_resp_json[0]["cmd"] == "Bounced" and "DeathLink" in server_resp_json[0]["tags"]:
                         return
-                except TimeoutError:
+                except asyncio.TimeoutError:
                     pass
 
 
