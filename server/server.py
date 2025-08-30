@@ -13,6 +13,7 @@ from time import sleep
 from client.APClient import run_client, set_client_running
 from config.config import AP_BASE_YAML_LOCATION, AP_INSTALL_LOCATION, FREE_LOCATIONS_PER_DEATH
 from message.death_message import death_message
+from message.server_up_message import server_up_message
 
 REROLL = False
 
@@ -29,15 +30,16 @@ def read_death_count():
         file_contents = death_file.read()
         return int(file_contents)
 
+def remove_output_files():
+    output_dir = os.path.join(AP_INSTALL_LOCATION, "output")
+    if os.path.isdir(output_dir):
+        for (dirpath, dirnames, filenames) in os.walk(output_dir):
+            for filename in filenames:
+                os.remove(os.path.join(output_dir, filename))
+            break
 
 def copy_yamls():
     players_dir = os.path.join(AP_INSTALL_LOCATION, "Players")
-    output_dir = os.path.join(AP_INSTALL_LOCATION, "output")
-    # if os.path.isdir(output_dir):
-    #     for (dirpath, dirnames, filenames) in os.walk(output_dir):
-    #         for filename in filenames:
-    #             os.remove(os.path.join(output_dir, filename))
-    #         break
     for (dirpath, dirnames, filenames) in os.walk(players_dir):
         for filename in filenames:
             os.remove(os.path.join(players_dir, filename))
@@ -63,8 +65,6 @@ def ap_generate():
             ap_regenerate()
             break
 
-
-
 async def ap_server(death_count, client):
     global REROLL
     REROLL = False
@@ -73,20 +73,24 @@ async def ap_server(death_count, client):
         file_extension = ".exe"
 
     output_dir = os.path.join(AP_INSTALL_LOCATION, "output")
+    artifacts_file = os.path.join(AP_INSTALL_LOCATION, "output", "artifacts.zip")
     output_file = ""
     for (dirpath, dirnames, filenames) in os.walk(output_dir):
         for filename in filenames:
-            if filename.endswith(".zip"):
+            if filename.endswith(".zip") and filename != "artifacts.zip":
                 output_file = os.path.join(output_dir, filename)
 
     ap_output_file = zipfile.ZipFile(output_file)
     ap_spoiler_log = ""
-
+    artifacts = zipfile.ZipFile(artifacts_file, "a")
     for file in ap_output_file.namelist():
         if file.endswith(".txt"):
             ap_output_file.extract(file, output_dir)
             ap_spoiler_log = os.path.join(output_dir, file)
-            break
+        else:
+            ap_output_file.extract(file, output_dir)
+            artifacts.write(os.path.join(output_dir, file), file)
+    artifacts.close()
     ap_server_file = os.path.join(AP_INSTALL_LOCATION, "ArchipelagoServer" + file_extension)
     p = subprocess.Popen((ap_server_file, "--host", "0.0.0.0", "--port", "6472", "--hint_cost", "10", output_file),
                          stdin=subprocess.PIPE, preexec_fn=os.setsid if os.name != "nt" else None)
@@ -101,6 +105,7 @@ async def ap_server(death_count, client):
         p.stdin.write(f"/send_location {location_slot[1]} {location_slot[0]}\n".encode())
     p.stdin.flush()
     sleep(5)
+    await server_up_message(client, artifacts_file)
     await run_client()
     p.terminate()
     if not REROLL:
@@ -142,4 +147,5 @@ async def server_monitor(client):
     ap_generate()
     await ap_server(death_count, client)
     copy_yamls()
+    remove_output_files()
     ap_regenerate()
