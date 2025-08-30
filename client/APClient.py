@@ -28,7 +28,7 @@ async def run_client():
                 try:
                     server_resp = await asyncio.wait_for(websocket.recv(), timeout=5)
                     server_resp_json = json.loads(server_resp)
-                    if server_resp_json[0]["cmd"] == "Bounced" and "DeathLink" in server_resp_json[0]["tags"]:
+                    if server_resp_json[0]["cmd"] == "Bounced" and "tags" in server_resp_json[0] and "DeathLink" in server_resp_json[0]["tags"]:
                         return
                 except asyncio.TimeoutError:
                     pass
