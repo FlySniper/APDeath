@@ -96,14 +96,15 @@ async def ap_server(death_count, client):
                          stdin=subprocess.PIPE, preexec_fn=os.setsid if os.name != "nt" else None)
     atexit.register(p.terminate)
     locations_slots = get_locations_from_spoiler(ap_spoiler_log)
+    locations_to_send = ""
     for i in range(0, death_count * FREE_LOCATIONS_PER_DEATH):
         if i > len(locations_slots) - 1:
             break
         index = random.randint(0, len(locations_slots) - 1)
         location_slot = locations_slots[index]
         locations_slots.pop(index)
-        p.stdin.write(f"/send_location {location_slot[1]} {location_slot[0]}\n".encode())
-    p.stdin.flush()
+        locations_to_send = locations_to_send + f"/send_location {location_slot[1]} {location_slot[0]}\n"
+    p.communicate(input=locations_to_send.encode())
     sleep(30)
     await server_up_message(client, artifacts_file)
     await run_client()
