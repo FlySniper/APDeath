@@ -121,6 +121,7 @@ async def ap_server(death_count, client):
     await server_up_message(client, artifacts_file)
     await run_client()
     p.terminate()
+    p.terminate()
     DEATH = True
     if not REROLL:
         print("Death detected. Restarting.")
