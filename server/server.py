@@ -122,6 +122,7 @@ async def ap_server(death_count, client):
     await asyncio.to_thread(server_proc)
     await server_up_message(client, artifacts_file)
     await run_client()
+    p.communicate(input="/exit\n".encode(), timeout=5)
     for i in range(0, 10):
         p.kill()
     DEATH = True
