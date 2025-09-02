@@ -114,14 +114,16 @@ async def ap_server(death_count, client):
             location_slot = locations_slots[index]
             locations_slots.pop(index)
             locations_to_send = locations_to_send + f"/send_location {location_slot[1]} {location_slot[0]}\n"
-    try:
-        p.communicate(input=locations_to_send.encode(), timeout=8)
-    except subprocess.TimeoutExpired:
-        pass
+    def server_proc():
+        try:
+            p.communicate(input=locations_to_send.encode(), timeout=10)
+        except subprocess.TimeoutExpired:
+            pass
+    await asyncio.to_thread(server_proc)
     await server_up_message(client, artifacts_file)
     await run_client()
-    p.terminate()
-    p.terminate()
+    for i in range(0, 10):
+        p.terminate()
     DEATH = True
     if not REROLL:
         print("Death detected. Restarting.")
