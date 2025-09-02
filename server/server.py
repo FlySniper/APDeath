@@ -49,12 +49,14 @@ def copy_yamls():
      for filename in os.listdir(AP_BASE_YAML_LOCATION)]
 
 
-def ap_regenerate():
+async def ap_regenerate():
     file_extension = ""
     if os.name == "nt":
         file_extension = ".exe"
-    ap_generate_file = os.path.join(AP_INSTALL_LOCATION, "ArchipelagoGenerate" + file_extension)
-    subprocess.call((ap_generate_file,))
+    async def generate_call():
+        ap_generate_file = os.path.join(AP_INSTALL_LOCATION, "ArchipelagoGenerate" + file_extension)
+        subprocess.call((ap_generate_file,))
+    await asyncio.gather(asyncio.to_thread(generate_call))
 
 def ap_generate():
     output_dir = os.path.join(AP_INSTALL_LOCATION, "output")
@@ -155,4 +157,4 @@ async def server_monitor(client):
     await ap_server(death_count, client)
     copy_yamls()
     remove_output_files()
-    ap_regenerate()
+    await ap_regenerate()
