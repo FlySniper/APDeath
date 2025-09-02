@@ -53,19 +53,19 @@ async def ap_regenerate():
     file_extension = ""
     if os.name == "nt":
         file_extension = ".exe"
-    async def generate_call():
+    def generate_call():
         ap_generate_file = os.path.join(AP_INSTALL_LOCATION, "ArchipelagoGenerate" + file_extension)
         subprocess.call((ap_generate_file,))
-    await asyncio.gather(asyncio.to_thread(generate_call))
+    await asyncio.to_thread(generate_call)
 
-def ap_generate():
+async def ap_generate():
     output_dir = os.path.join(AP_INSTALL_LOCATION, "output")
     if os.path.isdir(output_dir):
         for (dirpath, dirnames, filenames) in os.walk(output_dir):
             for filename in filenames:
                 return
             copy_yamls()
-            ap_regenerate()
+            await ap_regenerate()
             break
 
 async def ap_server(death_count, client):
@@ -83,6 +83,11 @@ async def ap_server(death_count, client):
         for filename in filenames:
             if filename.endswith(".zip") and filename != "artifacts.zip":
                 output_file = os.path.join(output_dir, filename)
+
+    if output_file == "":
+        copy_yamls()
+        remove_output_files()
+        await ap_regenerate()
 
     ap_output_file = zipfile.ZipFile(output_file)
     ap_spoiler_log = ""
@@ -153,7 +158,7 @@ def get_locations_from_spoiler(ap_spoiler_log):
 
 async def server_monitor(client):
     death_count = read_death_count()
-    ap_generate()
+    await ap_generate()
     await ap_server(death_count, client)
     copy_yamls()
     remove_output_files()
