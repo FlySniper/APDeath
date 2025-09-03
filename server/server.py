@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import zipfile
 import atexit
+import pexpect
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
 from time import sleep
@@ -101,11 +102,11 @@ async def ap_server(death_count, client):
             artifacts.write(os.path.join(output_dir, file), file)
     artifacts.close()
     ap_server_file = os.path.join(AP_INSTALL_LOCATION, "ArchipelagoServer" + file_extension)
-    p = subprocess.Popen((ap_server_file, "--host", "0.0.0.0", "--port", "6472", "--hint_cost", "10", output_file),
-                         stdin=subprocess.PIPE, preexec_fn=os.setsid if os.name != "nt" else None)
+    p = pexpect.spawn(f"{ap_server_file} --host 0.0.0.0 --port 6472 --hint_cost 10 {output_file}",
+                      encoding="utf-8",
+                      preexec_fn=os.setsid if os.name != "nt" else None)
     atexit.register(p.terminate)
     locations_slots = get_locations_from_spoiler(ap_spoiler_log)
-    locations_to_send = ""
     if DEATH:
         for i in range(0, death_count * FREE_LOCATIONS_PER_DEATH):
             if i > len(locations_slots) - 1:
@@ -113,18 +114,12 @@ async def ap_server(death_count, client):
             index = random.randint(0, len(locations_slots) - 1)
             location_slot = locations_slots[index]
             locations_slots.pop(index)
-            locations_to_send = locations_to_send + f"/send_location {location_slot[1]} {location_slot[0]}\n"
-    def server_proc():
-        try:
-            p.communicate(input=locations_to_send.encode(), timeout=10)
-        except subprocess.TimeoutExpired:
-            pass
-    await asyncio.to_thread(server_proc)
+            p.sendline(f"/send_location {location_slot[1]} {location_slot[0]}\n")
     await server_up_message(client, artifacts_file)
     await run_client()
-    p.stdin.write("/exit\n".encode())
+    p.sendline("/exit\n")
     for i in range(0, 10):
-        p.kill()
+        print(p.terminate())
     DEATH = True
     if not REROLL:
         print("Death detected. Restarting.")
