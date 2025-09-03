@@ -97,7 +97,7 @@ async def ap_server(death_count, client):
         if file.endswith(".txt"):
             ap_output_file.extract(file, output_dir)
             ap_spoiler_log = os.path.join(output_dir, file)
-        else:
+        elif file != "artifacts.zip":
             ap_output_file.extract(file, output_dir)
             artifacts.write(os.path.join(output_dir, file), file)
     artifacts.close()
@@ -115,6 +115,7 @@ async def ap_server(death_count, client):
             locations_slots.pop(index)
             p.sendline(f"/send_location {location_slot[1]} {location_slot[0]}\n")
             p.flush()
+    p.expect("server listening on")
     await server_up_message(client, artifacts_file)
     await run_client()
     p.sendline("/exit\n")
