@@ -103,8 +103,7 @@ async def ap_server(death_count, client):
     artifacts.close()
     ap_server_file = os.path.join(AP_INSTALL_LOCATION, "ArchipelagoServer" + file_extension)
     p = pexpect.spawn(f"{ap_server_file} --host 0.0.0.0 --port 6472 --hint_cost 10 {output_file}",
-                      encoding="utf-8",
-                      preexec_fn=os.setsid if os.name != "nt" else None)
+                      encoding="utf-8")
     atexit.register(p.terminate)
     locations_slots = get_locations_from_spoiler(ap_spoiler_log)
     if DEATH:
@@ -115,6 +114,7 @@ async def ap_server(death_count, client):
             location_slot = locations_slots[index]
             locations_slots.pop(index)
             p.sendline(f"/send_location {location_slot[1]} {location_slot[0]}\n")
+            p.flush()
     await server_up_message(client, artifacts_file)
     await run_client()
     p.sendline("/exit\n")
