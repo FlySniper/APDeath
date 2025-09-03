@@ -21,7 +21,7 @@ class MyClient(discord.Client):
 
     @tasks.loop(seconds=1)
     async def ap_monitor_task(self):
-        await server_monitor(self)
+        pass
 
     @ap_monitor_task.before_loop
     async def before_my_task(self):
@@ -56,6 +56,7 @@ class MyClient(discord.Client):
         slash_command.add_command(command)
         for guild in COMMAND_GUILD_IDS:
             print(await slash_command.sync(guild=discord.Object(id=guild)))
+        await server_monitor(self)
 
 client = MyClient()
 client.run(DISCORD_BOT_TOKEN)
