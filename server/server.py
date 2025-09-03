@@ -115,7 +115,7 @@ async def ap_server(death_count, client):
             locations_slots.pop(index)
             p.sendline(f"/send_location {location_slot[1]} {location_slot[0]}\n")
             p.flush()
-    p.expect("server listening on")
+    sleep(8)
     await server_up_message(client, artifacts_file)
     await run_client()
     p.sendline("/exit\n")
