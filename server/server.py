@@ -157,9 +157,10 @@ def get_locations_from_spoiler(ap_spoiler_log):
 
 
 async def server_monitor(client):
-    death_count = read_death_count()
-    await ap_generate()
-    await ap_server(death_count, client)
-    copy_yamls()
-    remove_output_files()
-    await ap_regenerate()
+    while True:
+        death_count = read_death_count()
+        await ap_generate()
+        await ap_server(death_count, client)
+        copy_yamls()
+        remove_output_files()
+        await ap_regenerate()
