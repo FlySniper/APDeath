@@ -120,7 +120,7 @@ async def ap_server(death_count, client):
     await run_client()
     p.sendline("/exit\n")
     for i in range(0, 10):
-        print(p.terminate())
+        p.kill(9)
     DEATH = True
     if not REROLL:
         print("Death detected. Restarting.")
