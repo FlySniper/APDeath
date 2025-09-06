@@ -111,7 +111,7 @@ async def ap_server(death_count, client):
     await server_up_message(client, artifacts_file)
     await run_client()
     await async_sleep(5)
-    p.close(True)
+    p.close(False)
     if not p.closed:
         quit(-1)
     DEATH = True
