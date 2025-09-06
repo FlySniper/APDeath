@@ -19,9 +19,10 @@ class MyClient(discord.Client):
     async def setup_hook(self) -> None:
         self.ap_monitor_task.start()
 
-    @tasks.loop(seconds=1)
+    @tasks.loop(seconds=1, count=1)
     async def ap_monitor_task(self):
         await server_monitor(self)
+        quit(-2)
 
     @ap_monitor_task.before_loop
     async def before_my_task(self):
