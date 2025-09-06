@@ -4,6 +4,8 @@ import json
 
 from uuid import uuid4
 
+from websockets import WebSocketException
+
 from config.config import PORT
 
 CLIENT_RUNNING = False
@@ -16,24 +18,29 @@ async def run_client():
     global CLIENT_RUNNING
     CLIENT_RUNNING = True
     async with websockets.connect(f"ws://127.0.0.1:{PORT}") as websocket:
-        while CLIENT_RUNNING:
-            room_info = await websocket.recv()
+        try:
             while CLIENT_RUNNING:
-                await websocket.send(connect_cmd())
-                connect_resp = await websocket.recv()
-                connect_resp_json = json.loads(connect_resp)
-                if connect_resp_json[0]["cmd"] == "Connected":
-                    break
-            await websocket.send(bounce_cmd())
-            bounced_resp = await websocket.recv()
-            while CLIENT_RUNNING:
-                try:
-                    server_resp = await asyncio.wait_for(websocket.recv(), timeout=5)
-                    server_resp_json = json.loads(server_resp)
-                    if server_resp_json[0]["cmd"] == "Bounced" and "tags" in server_resp_json[0] and "DeathLink" in server_resp_json[0]["tags"]:
-                        return
-                except asyncio.TimeoutError:
-                    pass
+                room_info = await websocket.recv()
+                while CLIENT_RUNNING:
+                    await websocket.send(connect_cmd())
+                    connect_resp = await websocket.recv()
+                    connect_resp_json = json.loads(connect_resp)
+                    if connect_resp_json[0]["cmd"] == "Connected":
+                        break
+                await websocket.send(bounce_cmd())
+                bounced_resp = await websocket.recv()
+                while CLIENT_RUNNING:
+                    try:
+                        server_resp = await asyncio.wait_for(websocket.recv(), timeout=5)
+                        server_resp_json = json.loads(server_resp)
+                        if server_resp_json[0]["cmd"] == "Bounced" and "tags" in server_resp_json[0] and "DeathLink" in server_resp_json[0]["tags"]:
+                            await websocket.close(reason="Death Link")
+                            return
+                    except asyncio.TimeoutError:
+                        pass
+            await websocket.close(1000, "Death Link")
+        except WebSocketException:
+            await websocket.close(1000, "Websocket Exception")
 
 
 def bounce_cmd():
