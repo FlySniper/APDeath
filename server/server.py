@@ -94,7 +94,7 @@ async def ap_server(death_count, client):
 
     ap_spoiler_log = find_spoiler_artifacts(artifacts_file, output_dir, output_file)
     ap_server_file = os.path.join(AP_INSTALL_LOCATION, "ArchipelagoServer" + file_extension)
-    p = pexpect.spawn(f"bash -c \"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}\"",
+    p = pexpect.spawn(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}",
                       encoding="utf-8")
     atexit.register(p.close)
     locations_slots = get_locations_from_spoiler(ap_spoiler_log)
