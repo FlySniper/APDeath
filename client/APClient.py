@@ -34,13 +34,16 @@ async def run_client():
                         server_resp = await asyncio.wait_for(websocket.recv(), timeout=5)
                         server_resp_json = json.loads(server_resp)
                         if server_resp_json[0]["cmd"] == "Bounced" and "tags" in server_resp_json[0] and "DeathLink" in server_resp_json[0]["tags"]:
+                            print("Websocket closed: Death Link")
                             await websocket.close(reason="Death Link")
                             return
                     except asyncio.TimeoutError:
                         pass
-            await websocket.close(1000, "Death Link")
+            print("Client Terminated")
+            await websocket.close(reason="Client Terminated")
         except WebSocketException:
-            await websocket.close(1000, "Websocket Exception")
+            print("Websocket Exception")
+            await websocket.close(reason="Websocket Exception")
 
 
 def bounce_cmd():
