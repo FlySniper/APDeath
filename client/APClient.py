@@ -4,6 +4,8 @@ import json
 
 from uuid import uuid4
 
+from config.config import PORT
+
 CLIENT_RUNNING = False
 
 def set_client_running(client_running):
@@ -13,7 +15,7 @@ def set_client_running(client_running):
 async def run_client():
     global CLIENT_RUNNING
     CLIENT_RUNNING = True
-    async with websockets.connect("ws://127.0.0.1:6472") as websocket:
+    async with websockets.connect(f"ws://127.0.0.1:{PORT}") as websocket:
         while CLIENT_RUNNING:
             room_info = await websocket.recv()
             while CLIENT_RUNNING:
