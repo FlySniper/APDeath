@@ -96,8 +96,9 @@ async def ap_server(death_count, client):
     ap_server_file = os.path.join(AP_INSTALL_LOCATION, "ArchipelagoServer" + file_extension)
     p = pexpect.spawn(f"bash -c \"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}\"",
                       encoding="utf-8")
-    atexit.register(p.terminate)
+    atexit.register(p.close)
     locations_slots = get_locations_from_spoiler(ap_spoiler_log)
+    await asyncio.to_thread(p.expect, **{"pattern": "server listening on", "timeout": 30000})
     if DEATH:
         for i in range(0, death_count * FREE_LOCATIONS_PER_DEATH):
             if i > len(locations_slots) - 1:
@@ -107,11 +108,10 @@ async def ap_server(death_count, client):
             locations_slots.pop(index)
             p.sendline(f"/send_location {location_slot[1]} {location_slot[0]}\n")
             p.flush()
-    await asyncio.to_thread(p.expect, **{"pattern": "server listening on", "timeout": 30000})
     await server_up_message(client, artifacts_file)
     await run_client()
     await async_sleep(5)
-    p.close(False)
+    p.close(True)
     if not p.closed:
         quit(-1)
     DEATH = True
