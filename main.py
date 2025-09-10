@@ -1,6 +1,7 @@
 import asyncio
 
 import discord
+import logging
 from discord import app_commands
 from discord.ext import tasks
 
@@ -57,6 +58,11 @@ class MyClient(discord.Client):
         slash_command.add_command(command)
         for guild in COMMAND_GUILD_IDS:
             print(await slash_command.sync(guild=discord.Object(id=guild)))
+
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(filename='ap_death.log', level=logging.INFO)
+logger.info('Hello')
 
 client = MyClient()
 client.run(DISCORD_BOT_TOKEN)

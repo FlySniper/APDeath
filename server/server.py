@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os.path
 import random
 import re
@@ -22,6 +23,8 @@ from message.server_up_message import server_up_message
 
 REROLL = False
 DEATH = False
+
+logger = logging.getLogger(__name__)
 
 async def async_sleep(seconds):
     await asyncio.to_thread(sleep, seconds)
@@ -108,15 +111,18 @@ async def ap_server(death_count, client):
             locations_slots.pop(index)
             p.sendline(f"/send_location {location_slot[1]} {location_slot[0]}\n")
             p.flush()
+            logger.info(f"Sent location {location_slot[1]} {location_slot[0]}\n")
     await server_up_message(client, artifacts_file)
     await run_client()
     await async_sleep(5)
     p.close(True)
     if not p.closed:
+        logger.error("Server not closed when it should be. Quitting")
         quit(-1)
+    logger.info("Server closed")
     DEATH = True
     if not REROLL:
-        print("Death detected. Restarting.")
+        logger.info("Death detected. Restarting.")
         await death_message(client, death_count + 1)
         with open("death_count.txt", "w+") as death_file:
             death_file.write(str(death_count + 1))

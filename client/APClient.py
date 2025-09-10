@@ -1,4 +1,6 @@
 import asyncio
+import logging
+
 import websockets
 import json
 
@@ -10,6 +12,7 @@ from config.config import PORT
 
 CLIENT_RUNNING = False
 
+logger = logging.getLogger(__name__)
 def set_client_running(client_running):
     global CLIENT_RUNNING
     CLIENT_RUNNING = client_running
@@ -18,8 +21,9 @@ async def run_client():
     global CLIENT_RUNNING
     CLIENT_RUNNING = True
     async with websockets.connect(f"ws://127.0.0.1:{PORT}") as websocket:
-        try:
-            while CLIENT_RUNNING:
+
+        while CLIENT_RUNNING:
+            try:
                 room_info = await websocket.recv()
                 while CLIENT_RUNNING:
                     await websocket.send(connect_cmd())
@@ -34,13 +38,14 @@ async def run_client():
                         server_resp = await asyncio.wait_for(websocket.recv(), timeout=5)
                         server_resp_json = json.loads(server_resp)
                         if server_resp_json[0]["cmd"] == "Bounced" and "tags" in server_resp_json[0] and "DeathLink" in server_resp_json[0]["tags"]:
-                            print("Websocket closed: Death Link")
+                            logger.info("Websocket closed: Death Link")
                             return
                     except asyncio.TimeoutError:
                         pass
-            print("Client Terminated")
-        except WebSocketException:
-            print("Websocket Exception")
+                logger.info("Client Terminated")
+            except WebSocketException:
+                logger.info("Websocket Exception")
+                await websocket.close()
 
 
 def bounce_cmd():
