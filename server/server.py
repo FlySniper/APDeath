@@ -1,28 +1,21 @@
 import asyncio
 import logging
 import os.path
-import random
 import re
 import shutil
 import subprocess
 import sys
 import zipfile
 import atexit
-from os import PathLike
-from signal import SIGTERM, CTRL_BREAK_EVENT
 
 import pexpect
-from concurrent.futures import ThreadPoolExecutor
-from threading import Thread
 from time import sleep
 
 from pexpect import popen_spawn
-from typing_extensions import LiteralString
 
 from client.APClient import run_client, set_client_running
 from config.config import AP_BASE_YAML_LOCATION, AP_INSTALL_LOCATION, FREE_LOCATIONS_PER_DEATH, PORT
 from message.death_message import death_message
-from message.server_up_message import server_up_message
 
 REROLL = False
 DEATH = False
@@ -103,7 +96,7 @@ async def ap_server(death_count, client):
     if os.name == "nt":
         p = popen_spawn.PopenSpawn("cmd", timeout=None, encoding="utf-8")
         p.send(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}\n")
-        atexit.register(p.kill, CTRL_BREAK_EVENT)
+        atexit.register(p.kill, 1)
     else:
         p = pexpect.spawn(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}",
                           encoding="utf-8")
@@ -113,8 +106,8 @@ async def ap_server(death_count, client):
     await run_client(client, artifacts_file, p, DEATH, death_count)
     await async_sleep(5)
     if os.name == "nt":
-        p.kill(CTRL_BREAK_EVENT)
-        p.kill(CTRL_BREAK_EVENT)
+        p.kill(1)
+        p.kill(1)
         await async_sleep(5)
     else:
         p.close(True)
