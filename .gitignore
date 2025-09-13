@@ -2,3 +2,4 @@ death_count.txt
 .idea/*
 *.pyc
 config.py
+*.log

@@ -9,12 +9,14 @@ import sys
 import zipfile
 import atexit
 from os import PathLike
+from signal import SIGTERM, CTRL_BREAK_EVENT
 
 import pexpect
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
 from time import sleep
 
+from pexpect import popen_spawn
 from typing_extensions import LiteralString
 
 from client.APClient import run_client, set_client_running
@@ -98,29 +100,27 @@ async def ap_server(death_count, client):
 
     ap_spoiler_log = find_spoiler_artifacts(artifacts_file, output_dir, output_file)
     ap_server_file = os.path.join(AP_INSTALL_LOCATION, "ArchipelagoServer" + file_extension)
-    p = pexpect.spawn(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}",
-                      encoding="utf-8")
+    if os.name == "nt":
+        p = popen_spawn.PopenSpawn("cmd", timeout=None, encoding="utf-8")
+        p.send(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}\n")
+        atexit.register(p.kill, CTRL_BREAK_EVENT)
+    else:
+        p = pexpect.spawn(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}",
+                          encoding="utf-8")
+        atexit.register(p.close, True)
     p.logfile_read = sys.stdout
-    atexit.register(p.close)
-    locations_slots = get_locations_from_spoiler(ap_spoiler_log)
     await asyncio.to_thread(p.expect, **{"pattern": "server listening on", "timeout": 30000})
-    if DEATH:
-        for i in range(0, death_count * FREE_LOCATIONS_PER_DEATH):
-            if i > len(locations_slots) - 1:
-                break
-            index = random.randint(0, len(locations_slots) - 1)
-            location_slot = locations_slots[index]
-            locations_slots.pop(index)
-            p.sendline(f"/send_location {location_slot[1]} {location_slot[0]}\n")
-            p.flush()
-            logger.info(f"Sent location {location_slot[1]} {location_slot[0]}\n")
-    await server_up_message(client, artifacts_file)
-    await run_client()
+    await run_client(client, artifacts_file, p, DEATH, death_count)
     await async_sleep(5)
-    p.close(True)
-    if not p.closed:
-        logger.error("Server not closed when it should be. Quitting")
-        quit(-1)
+    if os.name == "nt":
+        p.kill(CTRL_BREAK_EVENT)
+        p.kill(CTRL_BREAK_EVENT)
+        await async_sleep(5)
+    else:
+        p.close(True)
+        if not p.closed:
+            logger.error("Server not closed when it should be. Quitting")
+            quit(-1)
     logger.info("Server closed")
     DEATH = True
     if not REROLL:
