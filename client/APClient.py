@@ -9,7 +9,7 @@ from uuid import uuid4
 
 from websockets import WebSocketException
 
-from config.config import PORT, FREE_LOCATIONS_PER_DEATH
+from config.config import PORT, FREE_LOCATIONS_PER_DEATH, OPENSSL
 from message.server_up_message import server_up_message
 
 
@@ -23,7 +23,11 @@ def set_client_running(client_running):
 async def run_client(client, artifacts_file, server_process, send_free_locations, death_count):
     global CLIENT_RUNNING
     CLIENT_RUNNING = True
-    async with websockets.connect(f"ws://127.0.0.1:{PORT}", max_size=2**24) as websocket:
+    if OPENSSL:
+        address = f"wss://127.0.0.1:{PORT}"
+    else:
+        address = f"ws://127.0.0.1:{PORT}"
+    async with websockets.connect(address, max_size=2**24) as websocket:
         while CLIENT_RUNNING:
             try:
                 room_info = await websocket.recv()
@@ -35,7 +39,7 @@ async def run_client(client, artifacts_file, server_process, send_free_locations
                         if send_free_locations:
                             location_slots_ids = []
                             for player in connect_resp_json[0]["players"]:
-                                async with websockets.connect(f"ws://127.0.0.1:{PORT}", max_size=2**24) as slot_socket:
+                                async with websockets.connect(address, max_size=2**24) as slot_socket:
                                     room_info_player = await slot_socket.recv()
                                     await slot_socket.send(connect_cmd(player["name"]))
                                     connect_player_resp = await slot_socket.recv()
