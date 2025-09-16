@@ -10,7 +10,7 @@ from uuid import uuid4
 
 from websockets import WebSocketException
 
-from config.config import PORT, FREE_LOCATIONS_PER_DEATH, OPENSSL
+from config.config import PORT, FREE_LOCATIONS_PER_DEATH, OPENSSL, HOST_NAME
 from message.server_up_message import server_up_message
 
 
@@ -25,7 +25,7 @@ async def run_client(client, artifacts_file, server_process, send_free_locations
     global CLIENT_RUNNING
     CLIENT_RUNNING = True
     if OPENSSL:
-        address = f"wss://localhost:{PORT}"
+        address = f"wss://{HOST_NAME}:{PORT}"
     else:
         address = f"ws://127.0.0.1:{PORT}"
     async with websockets.connect(address, max_size=2**24) as websocket:
