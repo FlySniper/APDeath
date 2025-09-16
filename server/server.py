@@ -14,7 +14,8 @@ from time import sleep
 from pexpect import popen_spawn
 
 from client.APClient import run_client, set_client_running
-from config.config import AP_BASE_YAML_LOCATION, AP_INSTALL_LOCATION, FREE_LOCATIONS_PER_DEATH, PORT
+from config.config import AP_BASE_YAML_LOCATION, AP_INSTALL_LOCATION, FREE_LOCATIONS_PER_DEATH, PORT, OPENSSL, \
+    CERT_NAME, CERT_KEY_NAME
 from message.death_message import death_message
 
 REROLL = False
@@ -95,11 +96,18 @@ async def ap_server(death_count, client):
     ap_server_file = os.path.join(AP_INSTALL_LOCATION, "ArchipelagoServer" + file_extension)
     if os.name == "nt":
         p = popen_spawn.PopenSpawn("cmd", timeout=None, encoding="utf-8")
-        p.send(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}\n")
+        if OPENSSL:
+            p.send(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 --cert {CERT_NAME} --cert_key {CERT_KEY_NAME} {output_file}\n")
+        else:
+            p.send(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}\n")
         atexit.register(p.kill, 1)
     else:
-        p = pexpect.spawn(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}",
-                          encoding="utf-8")
+        if OPENSSL:
+            p = pexpect.spawn(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 --cert {CERT_NAME} --cert_key {CERT_KEY_NAME} {output_file}",
+                              encoding="utf-8")
+        else:
+            p = pexpect.spawn(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}",
+                              encoding="utf-8")
         atexit.register(p.close, True)
     p.logfile_read = sys.stdout
     await asyncio.to_thread(p.expect, **{"pattern": "server listening on", "timeout": 30000})
