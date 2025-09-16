@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import pathlib
 import random
 
 import websockets
@@ -10,7 +11,7 @@ from uuid import uuid4
 
 from websockets import WebSocketException
 
-from config.config import PORT, FREE_LOCATIONS_PER_DEATH, OPENSSL, HOST_NAME
+from config.config import PORT, FREE_LOCATIONS_PER_DEATH, OPENSSL, CERT_NAME
 from message.server_up_message import server_up_message
 
 
@@ -24,11 +25,14 @@ def set_client_running(client_running):
 async def run_client(client, artifacts_file, server_process, send_free_locations, death_count):
     global CLIENT_RUNNING
     CLIENT_RUNNING = True
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    localhost_crt = pathlib.Path(__file__).with_name(CERT_NAME)
+    ssl_context.load_verify_locations(localhost_crt)
     if OPENSSL:
-        address = f"wss://{HOST_NAME}:{PORT}"
+        address = f"wss://127.0.0.1:{PORT}"
     else:
         address = f"ws://127.0.0.1:{PORT}"
-    async with websockets.connect(address, max_size=2**24) as websocket:
+    async with websockets.connect(address, max_size=2**24, ssl=ssl_context) as websocket:
         while CLIENT_RUNNING:
             try:
                 room_info = await websocket.recv()
