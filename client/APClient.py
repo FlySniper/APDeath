@@ -28,7 +28,7 @@ async def run_client(client, artifacts_file, server_process, send_free_locations
         address = f"wss://localhost:{PORT}"
     else:
         address = f"ws://127.0.0.1:{PORT}"
-    async with websockets.connect(address, max_size=2**24, ssl=) as websocket:
+    async with websockets.connect(address, max_size=2**24) as websocket:
         while CLIENT_RUNNING:
             try:
                 room_info = await websocket.recv()
