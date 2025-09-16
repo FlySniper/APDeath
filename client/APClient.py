@@ -4,6 +4,7 @@ import random
 
 import websockets
 import json
+import ssl
 
 from uuid import uuid4
 
@@ -24,10 +25,10 @@ async def run_client(client, artifacts_file, server_process, send_free_locations
     global CLIENT_RUNNING
     CLIENT_RUNNING = True
     if OPENSSL:
-        address = f"wss://127.0.0.1:{PORT}"
+        address = f"wss://localhost:{PORT}"
     else:
         address = f"ws://127.0.0.1:{PORT}"
-    async with websockets.connect(address, max_size=2**24) as websocket:
+    async with websockets.connect(address, max_size=2**24, ssl=) as websocket:
         while CLIENT_RUNNING:
             try:
                 room_info = await websocket.recv()
