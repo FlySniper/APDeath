@@ -25,9 +25,9 @@ def set_client_running(client_running):
 async def run_client(client, artifacts_file, server_process, send_free_locations, death_count):
     global CLIENT_RUNNING
     CLIENT_RUNNING = True
-    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-    localhost_crt = pathlib.Path(__file__).with_name(CERT_NAME)
-    ssl_context.load_verify_locations(localhost_crt)
+    ssl_context = ssl.SSLContext()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
     if OPENSSL:
         address = f"wss://127.0.0.1:{PORT}"
     else:
