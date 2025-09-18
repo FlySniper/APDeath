@@ -73,13 +73,15 @@ async def run_client(client, artifacts_file, server_process, send_free_locations
                         server_resp_json = json.loads(server_resp)
                         if server_resp_json[0]["cmd"] == "Bounced" and "tags" in server_resp_json[0] and "DeathLink" in server_resp_json[0]["tags"]:
                             logger.info("Websocket closed: Death Link")
-                            return
+                            return True
                     except asyncio.TimeoutError:
                         pass
                 logger.info("Client Terminated")
             except WebSocketException as we:
                 logger.error(f"Websocket Exception {we}")
                 await websocket.close()
+                return not CLIENT_RUNNING
+    return not CLIENT_RUNNING
 
 
 def bounce_cmd():

@@ -111,7 +111,7 @@ async def ap_server(death_count, client):
         atexit.register(p.close, True)
     p.logfile_read = sys.stdout
     await asyncio.to_thread(p.expect, **{"pattern": "server listening on", "timeout": 30000})
-    await run_client(client, artifacts_file, p, DEATH, death_count)
+    should_reroll = await run_client(client, artifacts_file, p, DEATH, death_count)
     await async_sleep(5)
     if os.name == "nt":
         p.kill(1)
@@ -123,12 +123,13 @@ async def ap_server(death_count, client):
             logger.error("Server not closed when it should be. Quitting")
             quit(-1)
     logger.info("Server closed")
-    DEATH = True
-    if not REROLL:
+    DEATH = should_reroll
+    if not REROLL and should_reroll:
         logger.info("Death detected. Restarting.")
         await death_message(client, death_count + 1)
         with open("death_count.txt", "w+") as death_file:
             death_file.write(str(death_count + 1))
+    return should_reroll
 
 
 def find_spoiler_artifacts(artifacts_file, output_dir, output_file):
@@ -197,7 +198,8 @@ async def server_monitor(client):
         if not ap_check_game_in_progress():
             copy_yamls()
             await ap_generate()
-        await ap_server(death_count, client)
-        copy_yamls()
-        remove_output_files()
-        await ap_generate()
+        should_reroll = await ap_server(death_count, client)
+        if should_reroll:
+            copy_yamls()
+            remove_output_files()
+            await ap_generate()
