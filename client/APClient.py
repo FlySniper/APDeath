@@ -33,7 +33,7 @@ async def run_client(client, artifacts_file, server_process, send_free_locations
     else:
         address = f"ws://127.0.0.1:{PORT}"
         ssl_context = None
-    async with websockets.connect(address, max_size=2**24, ssl=ssl_context) as websocket:
+    async with websockets.connect(address, ping_timeout=None, ping_interval=None, max_size=16*1024*1024, ssl=ssl_context) as websocket:
         while CLIENT_RUNNING:
             try:
                 room_info = await websocket.recv()
@@ -45,7 +45,8 @@ async def run_client(client, artifacts_file, server_process, send_free_locations
                         if send_free_locations:
                             location_slots_ids = []
                             for player in connect_resp_json[0]["players"]:
-                                async with websockets.connect(address, max_size=2**24) as slot_socket:
+                                async with websockets.connect(address, max_size=16*1024*1024,
+                                                              ping_timeout=None, ping_interval=None) as slot_socket:
                                     room_info_player = await slot_socket.recv()
                                     await slot_socket.send(connect_cmd(player["name"]))
                                     connect_player_resp = await slot_socket.recv()
