@@ -106,10 +106,10 @@ async def ap_server(death_count, client):
             p = pexpect.spawn(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 --cert {CERT_NAME} --cert_key {CERT_KEY_NAME} {output_file}",
                               encoding="utf-8")
         else:
-            p = pexpect.spawn(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}",
+            p = pexpect.spawn(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file} > server_output.txt 2>&1",
                               encoding="utf-8")
         atexit.register(p.close, True)
-    p.logfile_read = sys.stdout
+
     await asyncio.to_thread(p.expect, **{"pattern": "server listening on", "timeout": 30000})
     should_reroll = await run_client(client, artifacts_file, p, DEATH, death_count)
     await async_sleep(5)
