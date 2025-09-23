@@ -11,6 +11,7 @@ import atexit
 import pexpect
 from time import sleep
 
+from Demos.win32console_demo import stdin
 from pexpect import popen_spawn
 
 from client.APClient import run_client, set_client_running
@@ -103,11 +104,11 @@ async def ap_server(death_count, client):
         atexit.register(p.kill, 1)
     else:
         if OPENSSL:
-            p = pexpect.spawn(f"nohup {ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 --cert {CERT_NAME} --cert_key {CERT_KEY_NAME} {output_file}",
-                              encoding="utf-8")
+            p = pexpect.spawn(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 --cert {CERT_NAME} --cert_key {CERT_KEY_NAME} {output_file}",
+                              encoding="utf-8", ignore_sighup=True)
         else:
-            p = pexpect.spawn(f"nohup {ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}",
-                              encoding="utf-8")
+            p = pexpect.spawn(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}",
+                              encoding="utf-8", ignore_sighup=True)
         atexit.register(p.close, True)
     p.logfile = open("ap_server.log", "w+")
     await asyncio.to_thread(p.expect, **{"pattern": "server listening on", "timeout": 30000})
