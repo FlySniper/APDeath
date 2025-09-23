@@ -11,7 +11,6 @@ import atexit
 import pexpect
 from time import sleep
 
-from Demos.win32console_demo import stdin
 from pexpect import popen_spawn
 
 from client.APClient import run_client, set_client_running
