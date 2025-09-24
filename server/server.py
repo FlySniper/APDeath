@@ -94,8 +94,10 @@ async def ap_server(death_count, client):
 
     ap_spoiler_log = find_spoiler_artifacts(artifacts_file, output_dir, output_file)
     ap_server_file = os.path.join(AP_INSTALL_LOCATION, "ArchipelagoServer" + file_extension)
-    # if os.name == "nt":
-    p = popen_spawn.PopenSpawn("cmd", timeout=None, encoding="utf-8")
+    if os.name == "nt":
+        p = popen_spawn.PopenSpawn("cmd", timeout=None, encoding="utf-8")
+    else:
+        p = popen_spawn.PopenSpawn("bash", timeout=None, encoding="utf-8")
     if OPENSSL:
         p.send(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 --cert {CERT_NAME} --cert_key {CERT_KEY_NAME} {output_file}\n")
     else:
