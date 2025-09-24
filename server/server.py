@@ -7,6 +7,7 @@ import subprocess
 import sys
 import zipfile
 import atexit
+from signal import SIGKILL
 
 import pexpect
 from time import sleep
@@ -120,7 +121,7 @@ async def ap_server(death_count, client):
         p.kill(1)
         await async_sleep(5)
     else:
-        p.close(True)
+        p.kill(SIGKILL)
         if not p.closed:
             logger.error("Server not closed when it should be. Quitting")
             quit(-1)
