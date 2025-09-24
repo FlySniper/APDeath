@@ -94,21 +94,21 @@ async def ap_server(death_count, client):
 
     ap_spoiler_log = find_spoiler_artifacts(artifacts_file, output_dir, output_file)
     ap_server_file = os.path.join(AP_INSTALL_LOCATION, "ArchipelagoServer" + file_extension)
-    if os.name == "nt":
-        p = popen_spawn.PopenSpawn("cmd", timeout=None, encoding="utf-8")
-        if OPENSSL:
-            p.send(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 --cert {CERT_NAME} --cert_key {CERT_KEY_NAME} {output_file}\n")
-        else:
-            p.send(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}\n")
-        atexit.register(p.kill, 1)
+    # if os.name == "nt":
+    p = popen_spawn.PopenSpawn("cmd", timeout=None, encoding="utf-8")
+    if OPENSSL:
+        p.send(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 --cert {CERT_NAME} --cert_key {CERT_KEY_NAME} {output_file}\n")
     else:
-        if OPENSSL:
-            p = pexpect.spawn(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 --cert {CERT_NAME} --cert_key {CERT_KEY_NAME} {output_file}",
-                              encoding="utf-8", ignore_sighup=True)
-        else:
-            p = pexpect.spawn(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}",
-                              encoding="utf-8", ignore_sighup=True)
-        atexit.register(p.close, True)
+        p.send(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}\n")
+    atexit.register(p.kill, 1)
+    # else:
+    #     if OPENSSL:
+    #         p = pexpect.spawn(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 --cert {CERT_NAME} --cert_key {CERT_KEY_NAME} {output_file}",
+    #                           encoding="utf-8", ignore_sighup=True)
+    #     else:
+    #         p = pexpect.spawn(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}",
+    #                           encoding="utf-8", ignore_sighup=True)
+    atexit.register(p.close, True)
     p.logfile = open("ap_server.log", "w+")
     await asyncio.to_thread(p.expect, **{"pattern": "server listening on", "timeout": 30000})
     should_reroll = await run_client(client, artifacts_file, p, DEATH, death_count)
