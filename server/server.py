@@ -98,13 +98,21 @@ async def ap_server(death_count, client):
     if os.name == "nt":
         p = popen_spawn.PopenSpawn("cmd", timeout=None, encoding="utf-8")
         atexit.register(p.kill, 1)
+        if OPENSSL:
+            p.send(
+                f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 --cert {CERT_NAME} --cert_key {CERT_KEY_NAME} {output_file}\n")
+        else:
+            p.send(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}\n")
     else:
-        p = popen_spawn.PopenSpawn("bash", timeout=None, encoding="utf-8")
+        if OPENSSL:
+            p = pexpect.spawn(
+                f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 --cert {CERT_NAME} --cert_key {CERT_KEY_NAME} {output_file}\n",
+                timeout=None, encoding="utf-8")
+        else:
+            p = pexpect.spawn(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}\n",
+                                       timeout=None, encoding="utf-8")
         atexit.register(p.kill, SIGKILL)
-    if OPENSSL:
-        p.send(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 --cert {CERT_NAME} --cert_key {CERT_KEY_NAME} {output_file}\n")
-    else:
-        p.send(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}\n")
+
 
     # else:
     #     if OPENSSL:
@@ -116,13 +124,13 @@ async def ap_server(death_count, client):
     p.logfile = open("ap_server.log", "w+")
     await asyncio.to_thread(p.expect, **{"pattern": "server listening on", "timeout": 30000})
     should_reroll = await run_client(client, artifacts_file, p, DEATH, death_count)
-    await async_sleep(5)
     if os.name == "nt":
         p.kill(1)
         p.kill(1)
         await async_sleep(5)
     else:
-        p.kill(SIGKILL)
+        p.close(True)
+        await async_sleep(5)
         if not p.closed:
             logger.error("Server not closed when it should be. Quitting")
             quit(-1)

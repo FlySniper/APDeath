@@ -12,7 +12,7 @@ from commands.set_death_count_command import set_death_count_command
 from config.config import DISCORD_BOT_TOKEN
 from server.server import server_monitor
 
-COMMAND_GUILD_IDS = [706545364249083906, 723702183417348197]
+COMMAND_GUILD_IDS = [706545364249083906]
 class MyClient(discord.Client):
     def __init__(self):
         super().__init__(intents=discord.Intents.default())
