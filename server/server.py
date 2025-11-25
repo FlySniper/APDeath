@@ -107,10 +107,10 @@ async def ap_server(death_count, client):
         if OPENSSL:
             p = pexpect.spawn(
                 f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 --cert {CERT_NAME} --cert_key {CERT_KEY_NAME} {output_file}\n",
-                timeout=None, encoding="utf-8")
+                timeout=None, encoding="utf-8", ignore_sighup=True)
         else:
             p = pexpect.spawn(f"{ap_server_file} --host 0.0.0.0 --port {PORT} --hint_cost 10 {output_file}\n",
-                                       timeout=None, encoding="utf-8")
+                                       timeout=None, encoding="utf-8", ignore_sighup=True)
         atexit.register(p.kill, SIGKILL)
 
 
