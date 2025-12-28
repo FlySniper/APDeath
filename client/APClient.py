@@ -76,7 +76,10 @@ async def run_client(client, artifacts_file, server_process, send_free_locations
                             logger.info("Websocket closed: Death Link")
                             return True
                     except asyncio.TimeoutError:
-                        pass
+                        try:
+                            server_process.read_nonblocking()
+                        except TimeoutError | EOFError:
+                            pass
                 logger.info("Client Terminated")
             except WebSocketException as we:
                 logger.error(f"Websocket Exception {we}")
