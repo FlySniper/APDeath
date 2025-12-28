@@ -78,7 +78,7 @@ async def run_client(client, artifacts_file, server_process, send_free_locations
                     except asyncio.TimeoutError:
                         try:
                             server_process.read_nonblocking()
-                        except TimeoutError | EOFError:
+                        except Exception:
                             pass
                 logger.info("Client Terminated")
             except WebSocketException as we:
