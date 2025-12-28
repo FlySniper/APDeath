@@ -77,7 +77,7 @@ async def run_client(client, artifacts_file, server_process, send_free_locations
                             return True
                     except asyncio.TimeoutError:
                         try:
-                            server_process.read_nonblocking()
+                            await asyncio.to_thread(server_process.read_nonblocking)
                         except Exception:
                             pass
                 logger.info("Client Terminated")
